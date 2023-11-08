@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from loader import load_files, crop_data
 
 
 def show(tiff_data, clip=None):
@@ -38,18 +37,3 @@ def animate(intensity_data, frame_delay=500, clip=None):
                         init_func=init, interval=frame_delay, blit=True)
 
     return fig, ani
-
-
-if __name__ == '__main__':
-    from loader import get_everthing, search_files
-
-    tifs = get_everthing(
-        "C:\\Users\\Teddy\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\XRD\\Silicon-silica-TT5-GIWAXS tune 2023-10-10")
-
-    angles, intensity_data, intensity_db = load_files(tifs)
-    intensity_data, intensity_db = crop_data(intensity_data, intensity_db, 30)
-
-    # tifs = get_everthing("D:\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\XRD\\Silicon-silica-TT5-GIWAXS tune 2023-10-10")
-    show(intensity_data[300], 300)
-    # animate(intensity_data)
-    plt.show()

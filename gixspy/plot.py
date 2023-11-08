@@ -1,165 +1,139 @@
-"""
-To find critical angle for GIWAXS.
-
-author: Teddy Tortorici
-"""
-
-import os
-import matplotlib.pylab as plt
 import numpy as np
-from loader import (extract_angle_from, load_image, find_direct_beam_file_index)
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.animation import FuncAnimation
 
 
-# def show(fig):
-#     plt.show()
-#     fig.canvas.manager.window.activateWindow()
-#     fig.canvas.manager.window.raise_()
+def show():
+    plt.show()
 
 
-def find_direct_beam_pixels_z(direct_beam_data: np.ndarray, threshold: int = 8) -> np.ndarray:
+def tiff(tiff_data: np.ndarray, clip: int | float | None = None, log: bool = False) -> None:
     """
-    Get list of indices where the direct beam is.
-    :param direct_beam_data: horizontally integrated data set of direct beam exposure.
-    :param threshold: the count threshold to look for the beam
-    :return: list of direct beam locations.
+    Display a TIFF image.
+    :param tiff_data: 2D numpy array containing pixel counts data (z, x)
+    :param clip: an optional counts scale data clipping.
+    :param log: optionally set log scale to counts.
+    :return: None
     """
-    direct_beam_bool = direct_beam_data > threshold     # bool of pixel brightness above a threshold.
-    direct_beam_indx = np.where(direct_beam_bool)[0]    # indices of those bright pixels
-
-    distances = np.diff(direct_beam_indx)               # get distances of a bright pixel from the next
-    return direct_beam_indx[get_indices_longest_repeated_element(distances)]
-
-
-def get_indices_longest_repeated_element(array: np.ndarray) -> np.ndarray:
-    """
-    Find the indices of the longest repeated element in an array.
-    :param array: Array to sift through.
-    :return: List of indices of locations of the longest repeated element
-    """
-    return find_sequence(array, get_longest_repeated_element(array))
-
-
-def get_longest_repeated_element(arr: np.ndarray) -> np.ndarray:
-    """
-    Return the longest repeated sequence of an element in an array.
-    :param arr: array to look through.
-    :return: longest sequence of repeated elements
-    """
-    mask = np.concatenate(([False], np.diff(arr) == 0, [False]))
-    idx = np.flatnonzero(mask[1:] != mask[:-1])
-    islands = [arr[idx[i]:idx[i+1] + 1] for i in range(0, len(idx), 2)]
-    island_lengths = np.array([len(island) for island in islands])
-    return islands[np.argmax(island_lengths)]
-
-
-def find_sequence(arr: np.ndarray, seq: np.ndarray) -> np.ndarray:
-    """
-    Search array for a specific sequence
-    :param arr: array to search
-    :param seq: array to find locations of
-    :return: array of indices of where the sequence lies in the array
-    """
-    n_arr = arr.size
-    n_seq = seq.size
-    r_seq = np.arange(n_seq)
-    match = (arr[np.arange(n_arr - n_seq + 1)[:, None] + r_seq] == seq).all(1)
-
-    # Get the range of those indices as final output
-    if match.any() > 0:
-        return np.where(np.convolve(match, np.ones(n_seq, dtype=int)) > 0)[0]
-    else:
-        return np.array([])  # No match found
-
-
-def main(files: list[str] | tuple[str]) -> None:
-    files = list(files)
-    try:
-        print(os.path.join(*files[0].split('/')[:-1]))
-    except TypeError:
-        print(os.path.join(*files[0].split('\\')[:-1]))
-
-    direct_beam_file_index = find_direct_beam_file_index(files)
-    print(f"Index of direct-beam file: {direct_beam_file_index}.")
-    intensity_db = np.sum(load_image(files[direct_beam_file_index]), axis=1)
-    del(files[direct_beam_file_index])
-    direct_beam_indx = find_direct_beam_pixels_z(intensity_db)
-    print(f"Pixel rows of direct beam: {direct_beam_indx}")
-
-    """Plot direct beam intesnity (horizontal integration)"""
-    plt.figure()
-    plt.plot(intensity_db)
-    plt.xlabel("Pixel row (counting from top)")
-    plt.ylabel("Counts")
-    plt.title("Direct Beam")
-
-    """Plot reflected beams (horizontal integration)"""
-    plt.figure(figsize=(10, 10))
-    ax = plt.subplot(111)
-    angles = np.empty(len(files))
-    total_refl_counts = np.empty(len(files))
-    for ii, tif in enumerate(files):
-        angle = str(extract_angle_from(tif))
-        angles[ii] = float(angle)
-        intensity = np.sum(load_image(tif), axis=1) - intensity_db
-        intensity[intensity < 0] = 0.
-        intensity[direct_beam_indx] = 0.
-        total_refl_counts[ii] = np.sum(intensity)
-        ax.plot(intensity, label=angle)
-    # print(total_counts)
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-    plt.title("Reflected beams (Horizontal Integration)")
-    plt.xlim([direct_beam_indx[0] - 80, direct_beam_indx[-1]])
-    plt.xlabel("Pixel y-axis (from top of array)")
-    plt.ylabel("Counts")
-
-    """Plot occluded beams (horizontal integration)"""
-    plt.figure(figsize=(10, 10))
-    ax = plt.subplot(111)
-
-    start_ind = direct_beam_indx[0] - 5
-    end_ind = direct_beam_indx[-1] + 5
-
-    plt.plot(intensity_db[start_ind:end_ind], label="direct beam")
-
-    total_occl_counts = np.empty(len(files))
-    for ii, tif in enumerate(files):
-        angle = str(extract_angle_from(tif))
-        angles[ii] = float(angle)
-        intensity = np.sum(load_image(tif), axis=1)[start_ind:end_ind]
-        total_occl_counts[ii] = np.sum(intensity)
-        ax.plot(intensity, label=angle)
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-    plt.title("Direct Beam occlusion (Horizontal Integration)")
-    plt.xlabel("Pixel y-axis (from top of array)")
-    plt.ylabel("Counts")
-
-    """Plot total reflected intensity at each angle"""
-    plt.figure()
-    plt.scatter(angles, total_refl_counts)
-    plt.title("Total Reflection Counts")
-    plt.xlabel("Theta (degrees)")
-    plt.ylabel("Counts")
-
-    """Plot total occluded direct beam intensity at each angle"""
-    plt.figure()
-    plt.scatter(angles, total_occl_counts)
-    plt.title("Total Occluded Direct Beam Counts")
-    plt.xlabel("Theta (degrees)")
-    plt.ylabel("Counts")
+    if clip is not None:
+        tiff_data[tiff_data > clip] = clip
+    if log:
+        tiff_data[tiff_data == 0] = 1
+        tiff_data = np.log(tiff_data)
+    plt.imshow(tiff_data)
     return None
 
 
-if __name__ == '__main__':
-    from loader import get_everthing, search_files
-    # tifs = search_files("D:\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\XRD\\example_tune_data\\alkdjflas")
-    # tifs = get_everthing("C:\\Users\\Teddy\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\Capacitors\\Mounts\\Mount 01\\GIWAXS 2023-06\\2023-08-28\\om scan")
-    # tifs = get_everthing("D:\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\Capacitors\\Mounts\\Mount 01\\GIWAXS 2023-08-28\\om scan")
-    # tifs = get_everthing("C:\\Users\\Teddy\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\Capacitors\\Mounts\\Mount 01\\GIWAXS 2023-09-27")
-    # tifs = get_everthing("D:\\OneDrive - school\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\XRD\\example_tune_data")
-    tifs = get_everthing("C:\\Users\\Teddy\\OneDrive - UCB-O365\\Rogerslab3\\Teddy\\XRD\\Silicon-silica-TT5-GIWAXS tune 2023-10-10")
-    main(tifs)
-    plt.show()
+def animate(intensity_data: np.ndarray, frame_delay: int = 20, clip: int | float | None = None, log: bool = False):
+    """
+    Animate TIFFs where each frame of the animation is a different exposure.
+    :param intensity_data: 3D numpy array (exposure, z, x).
+    :param frame_delay: time in milliseconds between each frame.
+    :param clip: an optional counts scale data clipping.
+    :param log: optionally set log scale to counts.
+    :return: figure, animation (need these to successfully display)
+    """
+    if clip is not None:
+        intensity_data[intensity_data > clip] = clip
+    if log:
+        intensity_data[intensity_data == 0] = 1
+        tiff_data = np.log(intensity_data)
+
+    fig = plt.figure()
+    ax = plt.axes(xlim=(0, intensity_data[0].shape[1]),
+                  ylim=(0, intensity_data[0].shape[0]))
+    im = plt.imshow(intensity_data[0][::-1], interpolation='none', vmin=0, vmax=10)
+
+    def init():
+        # im.set_data(intensity_db[z_lo:z_hi, x_lo:x_hi][::-1])
+        im.set_data(intensity_data[0][::-1])
+        return im,
+
+    # animation function.  This is called sequentially
+    def update(ii):
+        im.set_array(intensity_data[ii][::-1])
+        return im,
+
+    ani = FuncAnimation(fig, update, frames=intensity_data.shape[0],
+                        init_func=init, interval=frame_delay, blit=True)
+
+    return fig, ani
+
+
+def plot_line(intensity, pixel_size=None):
+    plt.figure()
+    intensity = np.sum(intensity, axis=1)
+    z = np.arange(len(intensity))
+    if pixel_size is not None:
+        z = z.astype("f")
+        z *= pixel_size
+        plt.xlabel("z (mm)")
+    else:
+        plt.xlabel("z (pixels)")
+    plt.scatter(z, intensity, facecolors="none", edgecolors="k", marker="o")
+    plt.title("Horizontal integration")
+    plt.ylabel("Counts")
+
+
+def plot_line_fit(intensity, fit_func, fit_params, pixel_size=None):
+    plt.figure()
+    z = np.arange(len(intensity))
+    if pixel_size is not None:
+        z = z.astype("f")
+        z *= pixel_size
+        plt.xlabel("z (mm)")
+    else:
+        plt.xlabel("z (pixels)")
+    plt.scatter(z, intensity, facecolors="none", edgecolors='k', marker="o")
+    x = np.linspace(z[0], z[-1], 1000)
+    plt.plot(x, fit_func(x, *fit_params))
+    plt.title("Fit")
+
+    plt.ylabel("Counts")
+
+
+def plot_lines(z, intensities, angles):
+    plt.figure()
+    for angles, intensity in zip(angles, intensities):
+        plt.scatter(z, intensity, label=f"{angles} degrees")
+    plt.title("Horizontal integration")
+    plt.xlabel("z (mm)")
+    plt.ylabel("Counts")
+
+
+def plot_single_exposure(x, z, intensity):
+    # intensity_data[np.where(intensity_data > cutoff)] = cutoff
+    x, z = np.meshgrid(x, z)
+
+    fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+
+    surf = ax.plot_surface(x, z, intensity, rstride=1, cstride=1, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+    ax.set_xlabel("X (mm)")
+    ax.set_ylabel("Z (mm)")
+    ax.set_zlabel("Intensity")
+
+
+def plot_all(angle, intensity, pixel_size, clip, log):
+    intensity = np.sum(intensity, axis=2)
+
+    if clip is not None:
+        intensity[intensity > clip] = clip
+    if log:
+        intensity[intensity == 0] = 1
+        intensity = np.log(intensity)
+
+    z_px = np.arange(intensity.shape[1])
+    z = (z_px[::-1] + 0.5) * pixel_size
+    angle, z = np.meshgrid(angle, z)
+
+    # fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+    fig, ax = plt.subplots()
+    c = ax.pcolor(angle, z, intensity.T, cmap=cm.coolwarm)
+
+    fig.colorbar(c, ax=ax)
+
+    ax.set_xlabel("angle (degrees)")
+    ax.set_ylabel("Z (mm)")
+    ax.set_label("Intensity")
