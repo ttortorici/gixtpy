@@ -14,7 +14,6 @@ setup(
                       'scipy',
                       'matplotlib',
                       'tk',
-                      'tkinter',
                       'tifffile',
                       'jupyter'],
     classifiers=[
