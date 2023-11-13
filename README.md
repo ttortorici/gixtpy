@@ -3,13 +3,30 @@
 
 Tools for assisting in tuning angle of incidence for grazing incidence x-ray scattering experiments.
 
+## How to use
+
+You can install the back-end with pip (https://pypi.org/project/gixtpy/)
+```
+pip install gixtpy
+```
+
+## Macro-maker and jupyter-notebook
+Download `main.ipynb` and `make_SAXS_macro.py` for examples of making SAXS macros to take tuning data and using gixtpy to plot the data.
+
+### How to take tuning data
+Need to move the beam stop out of the way, then move the sample out of the beam and take a short (0.1 ms) exposure named `direct_beam.tif`.
+
+Then move the sample back in the beam and take short exposures at many angles (try -1 to 1 degree if you are unsure where the true 0 angle is), each with a name like `db_-0_055_degrees.tif` for 0.055 degrees or `db_0_1_degrees.tif` for 0.1 degrees.
+
+
+
 ### Example
 ```
-import gixtpy
+import gixtpy as gp
 
-tiff_list = gixtpy.search_tiff_files()
+tiff_list = gp.search_tiff_files()
 
-angles, intensity_data, direct_beam = gixtpy.load_tiff_data(tiff_list)
+angles, intensity_data, direct_beam = gp.load_tiff_data(tiff_list)
 
 print("angles shape: {}".format(angles.shape))
 print("intensity_data shape: {}".format(intensity_data.shape))
@@ -21,7 +38,7 @@ pixels_below = 20   # number of pixels below the beam to keep (for crop)
 pixel_size = 0.075  # mm/pixel
 
 """Crop data"""
-id_c, db_c = gixtpy.crop_data(intensity_data, direct_beam, x_pixel_width, pixels_above, pixels_below)
+id_c, db_c = gp.crop_data(intensity_data, direct_beam, x_pixel_width, pixels_above, pixels_below)
 
 """Animate"""
 fps = 24     # frames per second
@@ -33,8 +50,8 @@ fig, ani = gixtpy.animate_tiffs(id_c, fps, clip, log)  # must return figure and 
 """Plot counts vs z vs counts"""
 clip = None  # counts clipping level
 log = True  # animate on a log scale
-gixtpy.plot_tuning(angles, id_c, pixel_size, clip, log)
-gixtpy.show()
+gp.plot_tuning(angles, id_c, pixel_size, clip, log)
+gp.show()
 ```
 
 ### Functions
