@@ -16,7 +16,7 @@ Download `main.ipynb` and `make_SAXS_macro.py` for examples of making SAXS macro
 ### How to take tuning data
 Need to move the beam stop out of the way, then move the sample out of the beam and take a short (0.1 ms) exposure named `direct_beam.tif`.
 
-Then move the sample back in the beam and take short exposures at many angles (try -1 to 1 degree if you are unsure where the true 0 angle is), each with a name like `db_-0_055_degrees.tif` for 0.055 degrees or `db_0_1_degrees.tif` for 0.1 degrees.
+Then move the sample back in the beam and take short exposures at many angles (try -1 to 1 degree if you are unsure where the true 0 angle is), each with a name like `db_-0_055_degrees.tif` for -0.055 degrees or `db_0_1_degrees.tif` for 0.1 degrees.
 
 
 
