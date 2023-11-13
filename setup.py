@@ -1,15 +1,18 @@
 from setuptools import setup
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
-    name='gixspy',
+    name='gixtpy',
     version='0.1.0',
-    description='A set up tools to assist in setting up grazing incidence'
+    description='Tools to assist in angle tuning grazing incidence'
                 'x-ray scattering (GIWAXS or GISASXS) experiments',
-    url='https://github.com/teddy-tort/giwaxs_tune/',
-    author='Edward (Teddy) C Tortorici',
+    url='https://github.com/teddy-tort/gixtpy/',
+    author='Edward C Tortorici',
     author_email='edward.tortorici@colorado.edu',
     license='MIT License',
-    packages=['gixspy'],
+    packages=['src.gixtpy'],
     install_requires=['numpy',
                       'scipy',
                       'matplotlib',
