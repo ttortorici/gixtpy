@@ -9,7 +9,7 @@ from matplotlib.animation import FuncAnimation
 
 
 __color_scheme_choices = ["plasma", "hot", "PuBu_r", "afmhot", "gist_heat", "copper", "viridis", "inferno", "magma", "cividis",
-                       "gray", "pink", "winter"]
+                          "gray", "pink", "winter"]
 
 
 """Loading Functions"""
