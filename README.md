@@ -5,10 +5,9 @@ Tools for assisting in tuning angle of incidence for grazing incidence x-ray sca
 
 ## How to use
 
-You can install the back-end with pip (https://pypi.org/project/gixtpy/)
-```
-pip install gixtpy
-```
+Download the repository and run
+
+```pip install -U tifffile numpy scipy numpy matplotlib tk```
 
 ## Macro-maker and jupyter-notebook
 Download `main.ipynb` and `make_SAXS_macro.py` for examples of making SAXS macros to take tuning data and using gixtpy to plot the data.
