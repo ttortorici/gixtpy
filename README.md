@@ -7,7 +7,7 @@ Tools for assisting in tuning angle of incidence for grazing incidence x-ray sca
 
 Download the repository and run
 
-```pip install -U tifffile numpy scipy numpy matplotlib tk```
+```pip install -U tifffile numpy scipy numpy matplotlib tk pyside6```
 
 ## Macro-maker and jupyter-notebook
 Download `main.ipynb` and `make_SAXS_macro.py` for examples of making SAXS macros to take tuning data and using gixtpy to plot the data.
