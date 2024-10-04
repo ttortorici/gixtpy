@@ -73,7 +73,7 @@ class SpecularOmega:
             if self.file_type == ".tif":
                 if file.name.replace(".tif", "").lower() in possible_identifiers:
                     return ii
-            elif fabio.open(file).header["Comment"] in possible_identifiers:
+            elif fabio.open(file).header["Comment"].lstrip("Base - ").lower() in possible_identifiers:
                 return ii
         print("Did not find a direct beam file")
         return None
@@ -132,7 +132,7 @@ class SpecularOmega:
     
     def get_angle(self, filename: Path) -> float:
         if self.file_type == ".edf":
-            angle = fabio.open(filename).header["Comment"]
+            angle = fabio.open(filename).header["Comment"][7:]
         elif self.file_type == ".tif":
             angle = self.angle_from_filename(filename.name)
         return float(angle)
@@ -249,7 +249,11 @@ class SpecularOmega:
         refraction_angle = np.sqrt(alpha * alpha * (1 - 0.5 * crit_sq) + crit_sq)
         return self.z0 + det_dist * np.tan(alpha + refraction_angle)
 
-    def plot(self, title="", critical_angle=None, horizon=False):
+    def plot(self, title="", critical_angle=None, horizon=False, det_dist=None, omega0=None):
+        if det_dist is None:
+            det_dist = self.det_dist_fit
+        if omega0 is None:
+            omega0 = self.omega0
         fig, ax = plt.subplots(1, 1, figsize=(4, 3))
         ax.set_facecolor('k')
 
@@ -258,24 +262,24 @@ class SpecularOmega:
 
         color_map = ax.pcolormesh(self.angles, self.z, self.intensity_specular.T,
                                   norm=LogNorm(1, self.intensity_specular.max()), cmap="plasma")
-        omega2 = np.linspace(self.omega0, self.omega0 + .75, 1000)
-        ax.plot(omega2, self.specular_fit(omega2, self.omega0, self.det_dist_fit), "white", linewidth=1, alpha=0.5)
+        omega2 = np.linspace(omega0, omega0 + .75, 1000)
+        ax.plot(omega2, self.specular_fit(omega2, omega0, det_dist), "white", linewidth=1, alpha=0.5)
         if horizon:
-            ax.plot(omega2, self.zero_angle(omega2, self.omega0, self.det_dist_fit), "white", linewidth=1, alpha=0.5)
+            ax.plot(omega2, self.zero_angle(omega2, omega0, det_dist), "white", linewidth=1, alpha=0.5)
         if critical_angle is not None:
             if isinstance(critical_angle, float):
                 critical_angle = [critical_angle]
             last = None
             for crit in critical_angle:
                 if crit == last:
-                    omega1 = np.linspace(self.omega0 + crit, self.omega0 + crit + .05, 100)
-                    ax.plot(omega1, self.refraction_pos2(omega1, self.omega0, self.det_dist_fit, crit), "white", linewidth=1, alpha=0.5)
+                    omega1 = np.linspace(omega0 + crit, omega0 + crit + .05, 100)
+                    ax.plot(omega1, self.refraction_pos2(omega1, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
                 else:
-                    ax.plot(omega2, self.yoneda(omega2, self.omega0, self.det_dist_fit, crit), "white", linewidth=1, alpha=0.5)
-                    omega1 = np.linspace(self.omega0 + crit, self.angles[-1], 1000)
-                    ax.plot(omega1, self.refraction_pos1(omega1, self.omega0, self.det_dist_fit, crit), "white", linewidth=1, alpha=0.5)
-                    omega1 = np.linspace(self.angles[0], self.omega0, 1000)
-                    ax.plot(omega1, self.refraction_neg(omega1, self.omega0, self.det_dist_fit, crit), "white", linewidth=1, alpha=0.5)
+                    ax.plot(omega2, self.yoneda(omega2, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
+                    omega1 = np.linspace(omega0 + crit, self.angles[-1], 1000)
+                    ax.plot(omega1, self.refraction_pos1(omega1, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
+                    omega1 = np.linspace(self.angles[0], omega0, 1000)
+                    ax.plot(omega1, self.refraction_neg(omega1, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
                     
                     # spec_at = self.specular_fit(crit + self.omega0, self.omega0, self.det_dist_fit)
                     # ax.plot([crit + self.omega0, crit + self.omega0], [spec_at + 0.6, spec_at + 1], "white", linewidth=.5, alpha=0.5)
