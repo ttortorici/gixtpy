@@ -73,7 +73,7 @@ class SpecularOmega:
             if self.file_type == ".tif":
                 if file.name.replace(".tif", "").lower() in possible_identifiers:
                     return ii
-            elif fabio.open(file).header["Comment"].lstrip("Base - ").lower() in possible_identifiers:
+            elif fabio.open(file).header["Comment"].replace("Base - ", "").lower() in possible_identifiers:
                 return ii
         print("Did not find a direct beam file")
         return None
@@ -132,7 +132,7 @@ class SpecularOmega:
     
     def get_angle(self, filename: Path) -> float:
         if self.file_type == ".edf":
-            angle = fabio.open(filename).header["Comment"][7:]
+            angle = fabio.open(filename).header["Comment"].replace("Base - ", "")
         elif self.file_type == ".tif":
             angle = self.angle_from_filename(filename.name)
         return float(angle)
