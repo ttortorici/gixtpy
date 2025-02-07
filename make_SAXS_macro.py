@@ -10,7 +10,7 @@ import os
 import datetime
 
 
-def create_file(angles: list[float], tag: str = "") -> None:
+def create_om_file(angles: list[float], tag: str = "") -> None:
     """
     Create a macro file for scanning angle for GIWAXS
     :param angles: list of angles to scan through
@@ -21,7 +21,38 @@ def create_file(angles: list[float], tag: str = "") -> None:
     if tag:
         tag += "_"
     date = datetime.datetime.now()
-    macroname = f'GIWAXS_tune_{date.year}-{date.month}-{date.day}.txt'
+    macroname = f'GI_om-scan_{date.year}-{date.month}-{date.day}.txt'
+    print("Writing Macro...")
+    if macroname[-4:].lower() != ".txt":
+        macroname = macroname.replace(".", "") + ".txt"
+    with open(os.path.join("Macros", macroname), 'w') as f:
+        f.write("umvr wbs -5\n")  # move beam stop out of the way
+        for om in angles:
+            f.write(f"umv om {om}\n")
+            formatted_angle = "{}_{}".format(*str(om).split("."))
+            f.write(f"eiger_run 0.1 db_{tag}{formatted_angle}_degrees.tif\n")
+        f.write("umvr z -10\n")  # move sample out of the way
+        f.write("eiger_run 0.1 direct_beam.tif\n")  # take direct beam exposure
+        f.write("umvr z 10\n")  # move sample back into beam
+        f.write("umvr wbs 5\n")
+        f.write("umv om 0\n")
+    print("Macro written")
+    print("Copy and paste the following into SAXS to run the macro:")
+    print("do " + os.path.join(os.getcwd(), macroname))
+    return None
+
+def create_z_file(angles: list[float], tag: str = "") -> None:
+    """
+    Create a macro file for scanning angle for GIWAXS
+    :param angles: list of angles to scan through
+    :param tag: optional identifier to put in filename
+    :return: None
+    """
+    print(angles)
+    if tag:
+        tag += "_"
+    date = datetime.datetime.now()
+    macroname = f'GI_z-scan_{date.year}-{date.month}-{date.day}.txt'
     print("Writing Macro...")
     if macroname[-4:].lower() != ".txt":
         macroname = macroname.replace(".", "") + ".txt"
@@ -42,7 +73,6 @@ def create_file(angles: list[float], tag: str = "") -> None:
     print("Copy and paste the following into SAXS to run the macro:")
     print("do " + os.path.join(os.getcwd(), macroname))
     return None
-
 
 def arange(start, finish, step):
     """
