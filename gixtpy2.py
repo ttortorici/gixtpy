@@ -261,9 +261,13 @@ class SpecularOmega:
         ax.set_ylabel("Z (mm)")
 
         color_map = ax.pcolormesh(self.angles, self.z, self.intensity_specular.T,
+<<<<<<< Updated upstream
                                   norm=LogNorm(1, self.intensity_specular.max()), cmap="plasma",
                                   rasterized=True)
         # color_map.set_edgecolor('face')
+=======
+                                  norm=LogNorm(1, self.intensity_specular.max()), cmap="plasma", rasterized=True)
+>>>>>>> Stashed changes
         omega2 = np.linspace(omega0, omega0 + .75, 1000)
         ax.plot(omega2, self.specular_fit(omega2, omega0, det_dist), "white", linewidth=1, alpha=0.5)
         if horizon:
