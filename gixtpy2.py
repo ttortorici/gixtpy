@@ -172,7 +172,7 @@ class SpecularOmega:
         self.intensity_specular = np.sum(data, axis=2)
         # print(self.intensity_specular.max())
 
-    def fit(self, z0=None, max_angle=1, pixel_cut=None):
+    def fit(self, z0=None, max_angle=1, pixel_cut=None, figsize=(4, 3)):
         if z0 is not None:
             self.z0 = z0
         print(f"z\u2080 = {self.z0}")
@@ -196,7 +196,7 @@ class SpecularOmega:
         print(f"    \u03C9\u2080 = ({self.omega0} \u00B1 {perr[0]})\u00B0")
         print(f"    d\u209B = ({self.det_dist_fit} \u00B1 {perr[1]}) mm")
 
-        fig, ax = plt.subplots(1, 1, figsize=(4, 3))
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
 
         ax.scatter(where_max_angle, z, s=10, marker='o',
                    edgecolors='k', lw=.75, facecolor='w')
@@ -210,9 +210,9 @@ class SpecularOmega:
         ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
         ax.set_title("where max pixel occurs")
         # ax.legend(title="pixel")
-        annotation_text = f"$\\omega_0 = {self.omega0:.4f} \\pm {perr[0]:.4f}^\\circ$\n$d_{{sd}} = {self.det_dist_fit:.2f} \\pm {perr[1]:.2f}$ mm"
+        annotation_text = f"$\\omega_0 = ({self.omega0:.4f} \\pm {perr[0]:.4f})^\\circ$\n$d_{{sd}} = ({self.det_dist_fit:.1f} \\pm {perr[1]:.1f})$ mm"
         ax.text(0.05, 0.95, annotation_text, transform=ax.transAxes, fontsize=10,
-                verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
+                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
 
         fig.tight_layout()
         return fig, ax
